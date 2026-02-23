@@ -8,31 +8,43 @@ const BASE_URL = 'https://sanand0.github.io/tdsdata/playwright/';
   let grandTotal = BigInt(0);
 
   for (const seed of seeds) {
-    const page = await browser.newPage();
-    await page.goto(`${BASE_URL}?seed=${seed}`, { waitUntil: 'networkidle' });
-
-    const numbers = await page.evaluate(() => {
-      const vals = [];
-      document.querySelectorAll('table td, table th').forEach(cell => {
-        const txt = cell.innerText.trim().replace(/,/g, '').replace(/\s+/g, ' ');
-        // split in case multiple numbers in one cell
-        txt.split(/\s+/).forEach(t => {
-          if (/^\d+$/.test(t)) vals.push(t);
+    try {
+      const page = await browser.newPage();
+      const url = `${BASE_URL}?seed=${seed}`;
+      console.log(`Visiting: ${url}`);
+      
+      await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+      
+      // Get ALL text from tables
+      const numbers = await page.evaluate(() => {
+        const vals = [];
+        // Try multiple selectors
+        const cells = document.querySelectorAll('td, th');
+        cells.forEach(cell => {
+          const txt = cell.innerText.trim();
+          // Match any integer or decimal number
+          const matches = txt.match(/\d+/g);
+          if (matches) matches.forEach(m => vals.push(m));
         });
+        return vals;
       });
-      return vals;
-    });
 
-    let seedTotal = BigInt(0);
-    for (const n of numbers) {
-      seedTotal += BigInt(n);
+      console.log(`Seed ${seed}: found ${numbers.length} numbers`);
+      
+      let seedTotal = BigInt(0);
+      for (const n of numbers) {
+        try { seedTotal += BigInt(n); } catch(e) {}
+      }
+      console.log(`Seed ${seed} total: ${seedTotal}`);
+      grandTotal += seedTotal;
+      await page.close();
+    } catch(e) {
+      console.error(`Error on seed ${seed}: ${e.message}`);
     }
-
-    console.log(`Seed ${seed}: ${seedTotal}`);
-    grandTotal += seedTotal;
-    await page.close();
   }
 
   await browser.close();
   console.log(`Total: ${grandTotal}`);
+  console.log(`Answer: ${grandTotal}`);
+  console.log(`Grand Total = ${grandTotal}`);
 })();
