@@ -1,0 +1,26 @@
+name: Scrape Table Sums
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 23f3004301@ds.study.iitm.ac.in - Install Playwright
+        run: |
+          npm init -y
+          npm install playwright
+          npx playwright install chromium --with-deps
+
+      - name: Scrape and sum all seed tables
+        run: node scrape.js
