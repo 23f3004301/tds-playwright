@@ -1,7 +1,7 @@
 const { chromium } = require('playwright');
 
 const seeds = [58, 59, 60, 61, 62, 63, 64, 65, 66, 67];
-const BASE_URL = 'https://sanand0.github.io/tdsdata/playwright/';
+const BASE_URL = 'https://sanand0.github.io/tdsdata/js_table/';
 
 (async () => {
   const browser = await chromium.launch();
@@ -10,8 +10,8 @@ const BASE_URL = 'https://sanand0.github.io/tdsdata/playwright/';
   for (const seed of seeds) {
     try {
       const page = await browser.newPage();
-      await page.goto(`${BASE_URL}?seed=${seed}`);
-      
+      await page.goto(`${BASE_URL}?seed=${seed}`, { waitUntil: 'networkidle', timeout: 30000 });
+
       // Wait until table cells actually appear
       await page.waitForSelector('td', { timeout: 15000 });
 
