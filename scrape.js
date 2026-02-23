@@ -5,23 +5,31 @@ const BASE_URL = 'https://sanand0.github.io/tdsdata/playwright/';
 
 (async () => {
   const browser = await chromium.launch();
-  let grandTotal = 0;
+  let grandTotal = BigInt(0);
 
   for (const seed of seeds) {
     const page = await browser.newPage();
     await page.goto(`${BASE_URL}?seed=${seed}`, { waitUntil: 'networkidle' });
 
-    const seedSum = await page.evaluate(() => {
-      let total = 0;
+    const numbers = await page.evaluate(() => {
+      const vals = [];
       document.querySelectorAll('table td, table th').forEach(cell => {
-        const val = parseFloat(cell.innerText.trim().replace(/,/g, ''));
-        if (!isNaN(val)) total += val;
+        const txt = cell.innerText.trim().replace(/,/g, '').replace(/\s+/g, ' ');
+        // split in case multiple numbers in one cell
+        txt.split(/\s+/).forEach(t => {
+          if (/^\d+$/.test(t)) vals.push(t);
+        });
       });
-      return total;
+      return vals;
     });
 
-    console.log(`Seed ${seed}: ${seedSum}`);
-    grandTotal += seedSum;
+    let seedTotal = BigInt(0);
+    for (const n of numbers) {
+      seedTotal += BigInt(n);
+    }
+
+    console.log(`Seed ${seed}: ${seedTotal}`);
+    grandTotal += seedTotal;
     await page.close();
   }
 
